@@ -1,33 +1,51 @@
-from astma.events import init_event, key_event
+from astma import utils
+import sys
+from astma.events import init_event, key_event, mouse_event
 from ._getch import getch_init, getch_finalize
 from .getkey import getkey
 from .screen import screen
-from .keys import CTRL_C, C3
+from .keys import CTRL_C, C3, keyinfo, mouseinfo
 
 _intercept_ctrlc = True
+
 
 def intercept_ctrlc(value):
     global _intercept_ctrlc
     _intercept_ctrlc = value
 
+
 def run_app(root):
 
-    getch_init()
-    ev = init_event()
-    scr = screen()
-    scr.control('\x1b[>4;2m')
-    root(scr.screenbuf, ev)
-
+    utils.debug(' ----------------- starting astma app -----------------')
+    scr = None
     try:
+        getch_init()
+        ev = init_event()
+        scr = screen()
+        root(scr.screenbuf, ev)
+
         while True:
             scr.flush()
             c = getkey()
-            ev = key_event(c)
+            if isinstance(c, keyinfo):
+                ev = key_event(c)
+            elif isinstance(c, mouseinfo):
+                ev = mouse_event(c)
+            else:
+                continue
 
             if (c == CTRL_C or c.key == C3) and _intercept_ctrlc:
                 break
 
             root(scr.screenbuf, ev)
+    except:
+        et, v, tb = sys.exc_info()
+        utils.debug('Exception occurred: {}: {}', et.__name__, v)
+        while tb:
+            utils.debug(
+                '  at {}:{}', tb.tb_frame.f_code.co_filename, tb.tb_lineno)
+            tb = tb.tb_next
     finally:
-        scr.control('\x1b[>4m')
+        if scr:
+            scr.deinit()
         getch_finalize()

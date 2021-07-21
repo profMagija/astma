@@ -83,8 +83,9 @@ MOD_ALT = 2
 MOD_CTRL = 4
 MOD_META = 8
 
+
 class keyinfo:
-    def __init__(self, key:int, mods=0):
+    def __init__(self, key: int, mods=0):
         "creates a new keyinfo instance"
         char = None
         if isinstance(key, str):
@@ -122,7 +123,6 @@ class keyinfo:
         else:
             self.char = None
 
-
         if self.char and self.char == self.char.upper() and self.char != self.char.lower():
             mods |= MOD_SHIFT
 
@@ -140,7 +140,7 @@ class keyinfo:
         super().__setattr__(name, value)
 
     def is_char(self):
-        return  32 <= self.key != 127 and self.mods & (~MOD_SHIFT) == 0
+        return 32 <= self.key != 127 and self.mods & (~MOD_SHIFT) == 0
 
     def __str__(self):
         if self.is_char():
@@ -152,9 +152,10 @@ class keyinfo:
                 ('A-' if self.alt else '') +
                 ('S-' if self.shift else '') +
                 ('M-' if self.meta else '') +
-                (self.char or KEYNAMES.get(self.key, '???')) + 
+                (self.char or KEYNAMES.get(self.key, '???')) +
                 '>'
             )
+
     def __repr__(self):
         return f"keyinfo('{self}')"
 
@@ -166,7 +167,59 @@ class keyinfo:
             return self.key == other
         return self.key == other.key and self.mods == other.mods
 
-    
+
+MOUSE_LMB = 0
+MOUSE_MMB = 1
+MOUSE_RMB = 2
+
+MOUSE_NAMES = {
+    None: "MouseRelease",
+    0: "MouseLeft",
+    1: "MouseMiddle",
+    2: "mouseRight"
+}
+
+
+class mouseinfo:
+    def __init__(self, key: int, row: int, col: int):
+        self.key = ord(key) & 3
+        if self.key == 3:
+            self.key = None
+        self.row = ord(row)
+        self.col = ord(col)
+        self.mods = ord(key) >> 2
+
+        self.shift = (self.mods & MOD_SHIFT) != 0
+        self.alt = (self.mods & MOD_ALT) != 0
+        self.meta = (self.mods & MOD_ALT) != 0
+        self.ctrl = (self.mods & MOD_CTRL) != 0
+
+    def get_row(self, sb=None):
+        if sb is None:
+            return self.row
+        else:
+            return self.row - sb.row_offset if sb.row_offset <= self.row < sb.row_offset + sb.height else None
+
+    def get_col(self, sb=None):
+        if sb is None:
+            return self.col
+        else:
+            return self.col - sb.col_offset if sb.col_offset <= self.col < sb.col_offset + sb.width else None
+
+    def __str__(self):
+        s = '<'
+        if self.ctrl:
+            s += 'C-'
+        if self.alt:
+            s += 'A-'
+        if self.shift:
+            s += 'S-'
+        s += '{}@{},{}>'.format(MOUSE_NAMES[self.key], self.row, self.col)
+        return s
+
+    def __repr__(self):
+        return 'mouseinfo(' + repr(str(self)) + ')'
+
 
 def get_key_by_name(name):
     try:
@@ -176,7 +229,9 @@ def get_key_by_name(name):
     except AttributeError:
         raise KeyError(name)
 
+
 def __getitem__(self, name: str):
     return get_key_by_name(name)
-    
+
+
 CTRL_C = keyinfo('<C-c>')

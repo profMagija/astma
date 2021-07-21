@@ -2,6 +2,7 @@
 def sgr(*args):
     return '\x1b[' + ';'.join(str(x) for x in args) + 'm'
 
+
 RESET = sgr(0)
 
 BLACK_FG = sgr(30)

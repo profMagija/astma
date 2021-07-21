@@ -4,10 +4,11 @@ from ._utils import get_state
 from ..screen import screenbuf
 from ..events import event
 
+
 class mod:
-    
+
     state_save = ()
-    
+
     def __call__(self, *args):
         if self.state_save:
             state = self.state
@@ -21,11 +22,12 @@ class mod:
             state = self.state
             for attr in self.state_save:
                 setattr(state, attr, getattr(self, attr))
-        
-    
+
     def render(self, buf: screenbuf, ev: event):
         pass
 
     @property
     def state(self):
+        if not hasattr(self, 'label'):
+            self.label = str(id(self))
         return get_state(self.label)

@@ -9,10 +9,9 @@ class text(mod):
 
     state_save = ('cursor', )
 
-    def __init__(self, label, text, focus=False):
+    def __init__(self, label, text):
         self.label = label
         self.text = lens(text)
-        self.focus = focus
         self.cursor = 0
 
     def _handle_key(self, ev: key_event):
@@ -43,11 +42,11 @@ class text(mod):
             self.text.lens_set(pre_text + post_text)
 
     def render(self, buf: screenbuf, ev: event):
-        if self.focus and isinstance(ev, key_event):
+        if buf.is_focused() and isinstance(ev, key_event):
             self._handle_key(ev)
 
-        buf.put_at(0, 0, self.text.lens_get() + ' ')
+        buf.put_at(0, 0, self.text.lens_get().ljust(buf.width))
         buf.put_at(1, 0, str(ev))
 
-        if self.focus:
+        if buf.is_focused():
             buf.cursor(0, self.cursor, CURSOR_STEADY_BAR)

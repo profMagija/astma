@@ -5,26 +5,29 @@ from .utils import fix_list_index
 _stdout = sys.stdout
 _stdin = sys.stdin
 
+
 class screen:
     def __init__(self):
         self._get_size()
-        _stdout.write('\x1b[2J\x1b[H') # clear the screen, and home
-        self.screenbuf = screenbuf(None, self, self.rows, self.cols, focused=True)
+        self.control('\x1b[2J\x1b[H')  # clear the screen, and home
+        self.control("\x1b[?1000h")  # enable mouse tracking
+        self.control('\x1b[>4;2m')  # set modifyOtherKeys
+        self.screenbuf = screenbuf(
+            None, self, self.rows, self.cols, focused=True)
         self.cursor_shape = CURSOR_BLINKING_BLOCK
 
     def _get_size(self):
-        _stdout.write('\x1b[999;999H\x1b[6n')
+        self.control('\x1b[999;999H\x1b[6n')
         _stdout.flush()
         c = _getch()
-        while c != '\x1b': 
+        while c != '\x1b':
             c = _getch()
-        _getch() # read the '['
+        _getch()  # read the '['
         self.rows, _ = _readnumber()
         self.cols, _ = _readnumber()
 
     def _goto_yx(self, row, col):
-        _stdout.write('\x1b[{};{}H'.format(row+1, col+1))
-
+        self.control('\x1b[{};{}H'.format(row+1, col+1))
 
     def put_at(self, row, col, data):
         self._goto_yx(row, col)
@@ -43,6 +46,11 @@ class screen:
 
     def flush(self):
         _stdout.flush()
+
+    def deinit(self):
+        self.control('\x1b[>4m')  # reset key modifier options
+        self.control("\x1b[?1000l")  # disable mouse tracking
+
 
 CURSOR_BLINKING_BLOCK = 1
 CURSOR_STEADY_BLOCK = 2
@@ -70,22 +78,22 @@ class screenbuf:
 
         # limit string length
         string = string[:self.width - col]
-        
+
         if control:
             self.scr.control(control)
         self.scr.put_at(row + self.row_offset, col + self.col_offset, string)
-    
+
     def control(self, control):
         self.scr.control(control)
 
     def is_focused(self):
-        return self.is_focused and (self.parent is None or self.parent.is_focused())
+        return self.focused and (self.parent is None or self.parent.is_focused())
 
-    def subbuf(self, row=0, col=0, height=None, width=None):
-        
+    def subbuf(self, row=0, col=0, height=None, width=None, **kwargs):
+
         row = fix_list_index(row, self.height)
-        col = fix_list_index(col, self.width)        
-        
+        col = fix_list_index(col, self.width)
+
         if height is None:
             height = self.height - row
 
@@ -95,7 +103,7 @@ class screenbuf:
         height = fix_list_index(height, self.height)
         width = fix_list_index(width, self.width)
 
-        return screenbuf(self, self.scr, height, width, self.row_offset + row, self.col_offset + col)
+        return screenbuf(self, self.scr, height, width, self.row_offset + row, self.col_offset + col, **kwargs)
 
     def focus(self, value=True):
         self.focused = value
@@ -114,13 +122,13 @@ class screenbuf:
     def cursor_off(self):
         self.cursor_pos = None
         self._update_cursor()
-        
+
     def _update_cursor(self):
         if self.is_focused():
-            if self.cursor_pos:    
+            if self.cursor_pos:
                 self.scr.cursor(
-                    (self.cursor_pos[0] + self.row_offset, 
-                    self.cursor_pos[1] + self.col_offset),
+                    (self.cursor_pos[0] + self.row_offset,
+                     self.cursor_pos[1] + self.col_offset),
                     self.cursor_shape
                 ),
             else:
@@ -131,9 +139,7 @@ class screenbuf:
         for i in range(self.height):
             self.put_at(i, 0, ws)
 
-
     def relative(self, row, col):
         row = fix_list_index(row, self.height)
         col = fix_list_index(col, self.width)
         return row + self.row_offset, col + self.col_offset
-

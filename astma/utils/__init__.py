@@ -9,12 +9,14 @@ def fix_list_index(index, length):
 
     return index
 
+
 def wrapper(fn):
     def helper(tgt):
         fn(tgt)
         return tgt
 
     return helper
+
 
 def slack_call(f, *args):
     if f is None:
@@ -27,6 +29,7 @@ def slack_call(f, *args):
         n = 1 if hasattr(f, '__self__') else 0
         return f(*args[:f.__code__.co_argcount - n])
 
+
 def optcurry(argname):
     """optionaly curries the argument provided"""
     def wrap(fn):
@@ -35,11 +38,15 @@ def optcurry(argname):
                 return fn(*args, **kwargs)
             else:
                 return lambda tgt: fn(*args, **{**kwargs, argname: tgt})
-        
+
         wrapped.__name__ = fn.__name__
         wrapped.__qualname__ = fn.__qualname__
 
         return wrapped
 
-
     return wrap
+
+
+def debug(fmt: str, *args, **kwargs):
+    with open('debug.log', 'a') as f:
+        f.write(fmt.format(*args, **kwargs) + '\n')

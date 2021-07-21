@@ -1,20 +1,22 @@
 try:
     from msvcrt import getch
+
     def getch_init():
         pass
+
     def getch_finalize():
         pass
 except ImportError:
     import sys
     import tty
     import termios
-        
+
     def getch_init():
         global fd, old, dbg_file
         fd = sys.stdin.fileno()
         old = termios.tcgetattr(fd)
         tty.setraw(fd)
-        dbg_file = open('./getch_debug.txt', 'w')
+        dbg_file = open('./getch_debug.log', 'w')
 
     def getch_finalize():
         termios.tcsetattr(fd, termios.TCSADRAIN, old)
@@ -24,7 +26,7 @@ except ImportError:
         """
         Gets a single character from STDIO.
         """
-        c = sys.stdin.read(1)
+        c = chr(sys.stdin.buffer.read(1)[0])
         dbg_file.write(f'{ord(c):3} {repr(c)}\n')
         return c
 
