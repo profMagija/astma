@@ -1,6 +1,7 @@
 import sys
 from .getkey import _readnumber, _getch
 from .utils import fix_list_index
+from . import ansi
 
 _stdout = sys.stdout
 _stdin = sys.stdin
@@ -30,9 +31,11 @@ class screen:
         self.control('\x1b[{};{}H'.format(row+1, col+1))
 
     def put_at(self, row, col, data):
+        self.control('\x1b7')
         self._goto_yx(row, col)
         assert('\x1b' not in data)
         _stdout.write(data)
+        self.control('\x1b8')
 
     def cursor(self, pos, shape):
         self.control('\x1b[?25h\x1b[{} q'.format(shape))
@@ -82,6 +85,8 @@ class screenbuf:
         if control:
             self.scr.control(control)
         self.scr.put_at(row + self.row_offset, col + self.col_offset, string)
+        if control:
+            self.scr.control(ansi.RESET)
 
     def control(self, control):
         self.scr.control(control)

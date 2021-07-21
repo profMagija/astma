@@ -68,8 +68,10 @@ _ESCAPES.update({
 })
 
 _FOLDS = {
-    127: keys.BACKSPACE,  # yes
-    10: keys.ENTER
+    10: (keys.ENTER, 0),
+    23: (keys.BACKSPACE, keys.MOD_CTRL),
+    28: (ord('\\'), keys.MOD_CTRL),
+    127: (keys.BACKSPACE, 0),  # yes
 }
 
 
@@ -108,10 +110,9 @@ def getkey():
 
             key, c = _readnumber()
             if c == 'M':
-                b = _getch()
-                x = _getch()
-                y = _getch()
-                utils.debug(' -- got mouse {!r} {!r} {!r}', b, x, y)
+                b = ord(_getch())
+                x = ord(_getch()) - 33
+                y = ord(_getch()) - 33
                 return keys.mouseinfo(b, x, y)
             if key == 27:
                 # xterm style
@@ -133,8 +134,10 @@ def getkey():
 
     else:
 
-        c = _FOLDS.get(ord(c), ord(c))
-        if 128 <= c < 192:
+        c = ord(c)
+        if c in _FOLDS:
+            c, mods = _FOLDS[c]
+        elif 128 <= c < 192:
             mods = keys.MOD_ALT
             c = c - 128
         elif 192 <= c < 256:

@@ -29,8 +29,8 @@ def run_app(root):
             c = getkey()
             if isinstance(c, keyinfo):
                 ev = key_event(c)
-            elif isinstance(c, mouseinfo):
-                ev = mouse_event(c)
+            # elif isinstance(c, mouseinfo):
+            #     ev = mouse_event(c)
             else:
                 continue
 
@@ -43,7 +43,10 @@ def run_app(root):
         utils.debug('Exception occurred: {}: {}', et.__name__, v)
         while tb:
             utils.debug(
-                '  at {}:{}', tb.tb_frame.f_code.co_filename, tb.tb_lineno)
+                '  at {}:{}',
+                tb.tb_frame.f_code.co_filename, tb.tb_lineno)
+            for local_name, local_v in tb.tb_frame.f_locals.items():
+                utils.debug('     {} = {}', local_name, local_v)
             tb = tb.tb_next
     finally:
         if scr:

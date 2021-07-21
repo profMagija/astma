@@ -9,8 +9,8 @@ class text(mod):
 
     state_save = ('cursor', )
 
-    def __init__(self, label, text):
-        self.label = label
+    def __init__(self, text, label=None):
+        super().__init__(label)
         self.text = lens(text)
         self.cursor = 0
 
@@ -45,8 +45,7 @@ class text(mod):
         if buf.is_focused() and isinstance(ev, key_event):
             self._handle_key(ev)
 
-        buf.put_at(0, 0, self.text.lens_get().ljust(buf.width))
-        buf.put_at(1, 0, str(ev))
+        buf.put_at(0, 0, str(self.text.lens_get()).ljust(buf.width))
 
         if buf.is_focused():
             buf.cursor(0, self.cursor, CURSOR_STEADY_BAR)

@@ -3,8 +3,15 @@ import typing
 
 
 def _lens_get(obj, names):
-    for name in names:
-        obj = getattr(obj, name)
+    for at, name in names:
+        if type(name) is lens:
+            name = name.lens_get()
+        if at == 'attr':
+            obj = getattr(obj, name)
+        elif at == 'item':
+            obj = obj[name]
+        else:
+            raise ValueError('unknown access type: ' + at)
     return obj
 
 
@@ -18,7 +25,10 @@ class lens:
             self.__names = names
 
     def __getattr__(self, name):
-        return lens(self.__object, self.__names + (name,))
+        return lens(self.__object, self.__names + (('attr', name),))
+
+    def __getitem__(self, name):
+        return lens(self.__object, self.__names + (('item', name),))
 
     def lens_get(self):
         return _lens_get(self.__object, self.__names)
@@ -26,8 +36,13 @@ class lens:
     def lens_set(self, value):
         if not self.__names:
             raise NotImplementedError()
-        *get_names, set_name = self.__names
-        setattr(_lens_get(self.__object, get_names), set_name, value)
+        *get_names, (set_type, set_name) = self.__names
+        if set_type == 'attr':
+            setattr(_lens_get(self.__object, get_names), set_name, value)
+        elif set_type == 'item':
+            _lens_get(self.__object, get_names)[set_name] = value
+        else:
+            raise ValueError('unknown access type: ' + set_type)
 
 
 if typing.TYPE_CHECKING:

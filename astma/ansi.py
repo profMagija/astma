@@ -4,6 +4,11 @@ def sgr(*args):
 
 
 RESET = sgr(0)
+BOLD = sgr(1)
+FAINT = sgr(2)
+ITALIC = sgr(3)
+UNDERLINED = sgr(4)
+INVERSE = sgr(7)
 
 BLACK_FG = sgr(30)
 RED_FG = sgr(31)

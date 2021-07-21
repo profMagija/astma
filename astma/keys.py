@@ -2,14 +2,14 @@ import sys
 
 C3 = 3
 
-BACKSPACE = 8
 TAB = 9
 ENTER = 13
 SPACE = 32
-DELETE = 127
+BACKSPACE = 127
 
 HOME = -1
 INSERT = -2
+DELETE = -3
 END = -4
 PAGEUP = -5
 PAGEDOWN = -6
@@ -117,14 +117,17 @@ class keyinfo:
             key = key.key
 
         self.key = key
-        if 32 <= key != 127:
-            mods &= ~MOD_SHIFT
+        if 1 < key < 32:
+            mods |= MOD_CTRL
+            self.char = chr(key + ord('@'))
+        elif 32 <= key != 127:
             self.char = chr(key)
+            if self.char == self.char.upper() and self.char != self.char.lower():
+                mods |= MOD_SHIFT
+            else:
+                mods &= ~MOD_SHIFT
         else:
             self.char = None
-
-        if self.char and self.char == self.char.upper() and self.char != self.char.lower():
-            mods |= MOD_SHIFT
 
         self.mods = mods
         self.shift = (mods & MOD_SHIFT) != 0
@@ -171,28 +174,45 @@ class keyinfo:
 MOUSE_LMB = 0
 MOUSE_MMB = 1
 MOUSE_RMB = 2
+MOUSE_SCROLL_UP = 3
+MOUSE_SCROLL_DOWN = 4
 
 MOUSE_NAMES = {
-    None: "MouseRelease",
     0: "MouseLeft",
     1: "MouseMiddle",
-    2: "mouseRight"
+    2: "MouseRight",
+    3: "MouseNone",
+    4: "MouseScrollUp",
+    5: "MouseScrollDown",
+    6: "Wot1",
+    7: "Wot2",
 }
 
 
 class mouseinfo:
     def __init__(self, key: int, row: int, col: int):
-        self.key = ord(key) & 3
-        if self.key == 3:
-            self.key = None
-        self.row = ord(row)
-        self.col = ord(col)
-        self.mods = ord(key) >> 2
+        self.key = key & 3
+
+        self.is_keypress = True
+        if self.key < 2 and (key & 96) == 96:
+            self.key += 4
+        elif key & 64:
+            self.is_keypress = False
+
+        self.row = row
+        self.col = col
+        self.mods = (key >> 2) & 7
 
         self.shift = (self.mods & MOD_SHIFT) != 0
         self.alt = (self.mods & MOD_ALT) != 0
         self.meta = (self.mods & MOD_ALT) != 0
         self.ctrl = (self.mods & MOD_CTRL) != 0
+
+        self.left = self.key == 0
+        self.middle = self.key == 1
+        self.right = self.key == 2
+        self.scroll_up = self.key == 4
+        self.scroll_down = self.key == 5
 
     def get_row(self, sb=None):
         if sb is None:

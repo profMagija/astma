@@ -7,7 +7,11 @@ from ..events import event
 
 class mod:
 
+    label = None
     state_save = ()
+
+    def __init__(self, label):
+        self.label = label
 
     def __call__(self, *args):
         if self.state_save:
@@ -28,6 +32,4 @@ class mod:
 
     @property
     def state(self):
-        if not hasattr(self, 'label'):
-            self.label = str(id(self))
-        return get_state(self.label)
+        return get_state(self.label or str(id(self)))
