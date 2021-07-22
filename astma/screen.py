@@ -12,7 +12,7 @@ class screen:
         self._get_size()
         self.control('\x1b[2J\x1b[H')  # clear the screen, and home
         self.control("\x1b[?1000h")  # enable mouse tracking
-        self.control('\x1b[>4;2m')  # set modifyOtherKeys
+        self.control('\x1b[>1;15m\x1b[>4;2m')  # set modifyOtherKeys
         self.screenbuf = screenbuf(
             None, self, self.rows, self.cols, focused=True)
         self.cursor_shape = CURSOR_BLINKING_BLOCK
@@ -53,6 +53,7 @@ class screen:
     def deinit(self):
         self.control('\x1b[>4m')  # reset key modifier options
         self.control("\x1b[?1000l")  # disable mouse tracking
+        self.control('\x1b[2J\x1b[H')  # clear the screen, and home
 
 
 CURSOR_BLINKING_BLOCK = 1
@@ -148,3 +149,16 @@ class screenbuf:
         row = fix_list_index(row, self.height)
         col = fix_list_index(col, self.width)
         return row + self.row_offset, col + self.col_offset
+
+    def make_null(self):
+        return null_buffer(self.parent, None, self.height, self.width, self.row_offset, self.col_offset, self.focused)
+
+
+class null_buffer(screenbuf):
+    def put_at(self, *args, **kwargs): pass
+    def control(self, *args, **kwargs): pass
+    def _update_cursor(self): pass
+    def clear(self): pass
+
+    def subbuf(self, *args, **kwargs):
+        return super().subbuf(*args, **kwargs).make_null()

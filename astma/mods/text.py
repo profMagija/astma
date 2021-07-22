@@ -1,7 +1,7 @@
 from .mod import mod
 from ..screen import CURSOR_STEADY_BAR, screenbuf
 from ..events import event, key_event
-from ..lens import lens
+from ..lens import constant_lens, lens
 from ..keys import BACKSPACE, DELETE, LEFT, RIGHT
 
 
@@ -9,9 +9,10 @@ class text(mod):
 
     state_save = ('cursor', )
 
-    def __init__(self, text, label=None):
+    def __init__(self, text, prefix=None, label=None):
         super().__init__(label)
         self.text = lens(text)
+        self.prefix = lens(prefix) if prefix is not None else constant_lens('')
         self.cursor = 0
 
     def _handle_key(self, ev: key_event):
@@ -44,8 +45,15 @@ class text(mod):
     def render(self, buf: screenbuf, ev: event):
         if buf.is_focused() and isinstance(ev, key_event):
             self._handle_key(ev)
-
-        buf.put_at(0, 0, str(self.text.lens_get()).ljust(buf.width))
+    
+        prefix_text = str(self.prefix.lens_get(''))
+        text_content = prefix_text + str(self.text.lens_get(''))
+        buf.put_at(0, 0, text_content.ljust(buf.width))
+        
+        if self.cursor >= len(text_content):
+            self.cursor = len(text_content) - 1
+        if self.cursor < 0:
+            self.cursor = 0
 
         if buf.is_focused():
-            buf.cursor(0, self.cursor, CURSOR_STEADY_BAR)
+            buf.cursor(0, self.cursor + len(prefix_text), CURSOR_STEADY_BAR)

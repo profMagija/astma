@@ -1,3 +1,4 @@
+from ..lens import lens
 from typing import List
 from astma.events import event
 from astma.screen import screenbuf
@@ -7,12 +8,12 @@ from .mod import mod
 class layout(mod):
     state_save = ('cur_focus', )
 
-    def __init__(self, grid, widths=None, heights=None, label=None):
+    def __init__(self, grid, widths=None, heights=None, cur_focus=None, label=None):
         super().__init__(label)
         self.grid = grid
         self.widths = widths,
         self.heights = heights
-        self.cur_focus = (0, 0)
+        self.cur_focus = lens(cur_focus or (0, 0))
         self._bufs = None
 
     def render(self, buf: screenbuf, ev: event):

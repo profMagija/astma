@@ -40,6 +40,9 @@ class menu(mod):
     def _change_selection(self, rel: int):
         cur_idx = None
         values = self.values.lens_get()
+        if isinstance(values, dict):
+            values = tuple(values)
+
         for i, v in enumerate(values):
             if _get_key(v) == self.cur_key.lens_get():
                 cur_idx = i
@@ -64,7 +67,12 @@ class menu(mod):
         if buf.is_focused() and isinstance(ev, key_event):
             self._handle_key(ev)
 
+        self._change_selection(0)
+
         values = self.values.lens_get()
+        if isinstance(values, dict):
+            values = tuple(values.items())
+
         cur_selection = self.cur_key.lens_get()
 
         if self.row_offset != 0 and self.row_offset + buf.height > len(values):
@@ -83,6 +91,8 @@ class menu(mod):
                     row_idx, 0,
                     text.ljust(buf.width),
                     control=ctrl)
+            else:
+                buf.put_at(row_idx, 0, ''.ljust(buf.width))
 
         # if buf.is_focused():
         #     buf.cursor(0, self.cursor, CURSOR_STEADY_BAR)

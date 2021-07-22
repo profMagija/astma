@@ -107,7 +107,6 @@ def getkey():
     if c == '\x1b':
         c = _getch()
         if c == '[':
-
             key, c = _readnumber()
             if c == 'M':
                 b = ord(_getch())
@@ -127,7 +126,6 @@ def getkey():
                 if c != '~':
                     mods = key
                     key = c
-
             return keys.keyinfo(_ESCAPES[key], mods=mods-1)
         else:
             return keys.keyinfo(ord(c), mods=keys.MOD_ALT)

@@ -27,6 +27,7 @@ def run_app(root):
         while True:
             scr.flush()
             c = getkey()
+            scr.cursor_off()
             if isinstance(c, keyinfo):
                 ev = key_event(c)
             # elif isinstance(c, mouseinfo):
